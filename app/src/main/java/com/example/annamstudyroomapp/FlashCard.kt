@@ -1,3 +1,4 @@
+//FlashCard.kt
 package com.example.annamstudyroomapp
 
 import androidx.room.ColumnInfo
@@ -17,7 +18,8 @@ import androidx.room.RoomDatabase
 data class FlashCard(
     @PrimaryKey(autoGenerate = true) val uid: Int,
     @ColumnInfo(name = "english_card") val englishCard: String?,
-    @ColumnInfo(name = "vietnamese_card") val vietnameseCard: String?
+    @ColumnInfo(name = "vietnamese_card") val vietnameseCard: String?,
+    @ColumnInfo(name = "audio_card") val audioCard: String?
 )
 
 @Dao
@@ -46,17 +48,23 @@ interface FlashCardDao {
     suspend fun deleteByCardPair(english: String, vietnamese: String)
 
 //    Select Flashcard by pair
-    @Query("SELECT * FROM FlashCards " +
-            "WHERE english_card LIKE '%' || :english || '%' " +
-            "AND vietnamese_card LIKE '%' || :vietnamese || '%' ")
-    suspend fun searchFlashCardByPair(english: String, vietnamese: String): List<FlashCard>
+@Query(
+    "SELECT * FROM FlashCards WHERE " +
+            "(CASE WHEN :exactEn THEN english_card LIKE :en  " +
+            "WHEN NOT :exactEn  THEN english_card LIKE '%' || :en || '%' END) " +
+            "AND " +
+            "(CASE WHEN :exactVn THEN vietnamese_card LIKE :vn " +
+            "WHEN NOT :exactVn THEN vietnamese_card LIKE '%' || :vn || '%' END)"
+)
+suspend fun searchFlashCardByPair(en: String, exactEn: Boolean, vn: String, exactVn: Boolean): List<FlashCard>
 
     @Query("UPDATE FlashCards " +
             "SET english_card = :englishNew, " +
-            "vietnamese_card = :vietnameseNew " +
+            "vietnamese_card = :vietnameseNew, " +
+            "audio_card = :audioNew " +
             "WHERE english_card = :englishOld " +
             "AND vietnamese_card = :vietnameseOld")
-    suspend fun updateFlashCardByPair( englishOld: String, vietnameseOld: String, englishNew: String,  vietnameseNew: String )
+    suspend fun updateFlashCardByPair( englishOld: String, vietnameseOld: String, englishNew: String,  vietnameseNew: String, audioNew: String?)
 
     @Insert
     suspend fun insertAll(vararg flashCard: FlashCard)

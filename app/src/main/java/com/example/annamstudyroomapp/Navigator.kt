@@ -1,3 +1,4 @@
+//Navigator.kt
 package com.example.annamstudyroomapp
 
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +28,7 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
 
     val navigateToHome: () -> Unit = {
         navController.navigate(MainRoute) {
-             launchSingleTop = true
+            launchSingleTop = true
         }
     }
 
@@ -52,9 +53,15 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
         flashCardDao.getRandomFlashCards(limit)
     }
 
-    val searchFlashcardByPair: suspend (String, String) -> List<FlashCard> = { english, vietnamese ->
-        flashCardDao.searchFlashCardByPair(english, vietnamese)
-    }
+    val searchFlashCardByPair: suspend (String, Boolean, String, Boolean) -> List<FlashCard> =
+        { en, exactEn, vn, exactVn ->
+            flashCardDao.searchFlashCardByPair(
+                en,
+                exactEn,
+                vn,
+                exactVn
+            )
+        }
 
     val deleteFlashcardByPair: suspend (FlashCard) -> Unit = { card ->
         flashCardDao.deleteByCardPair(
@@ -63,20 +70,20 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
         )
     }
 
-    val getFlashcardByPair: suspend (String, String) -> FlashCard? = { english, vietnamese ->
+    val getFlashCardByPair: suspend (String, String) -> FlashCard? = { english, vietnamese ->
         flashCardDao.getFlashCardByPair(english, vietnamese)
     }
 
-
-    val updateFlashcardByPair: suspend (String, String, String, String) -> Unit = {
-        englishOld, vietnameseOld, englishNew, vietnameseNew ->
-        flashCardDao.updateFlashCardByPair(
-            englishOld = englishOld,
-            vietnameseOld = vietnameseOld,
-            englishNew = englishNew,
-            vietnameseNew = vietnameseNew
-        )
-    }
+    val updateFlashCardByPair: suspend (String, String, String, String, String?) -> Unit =
+        { englishOld, vietnameseOld, englishNew, vietnameseNew, audioNew ->
+            flashCardDao.updateFlashCardByPair(
+                englishOld,
+                vietnameseOld,
+                englishNew,
+                vietnameseNew,
+                audioNew
+                )
+        }
 
     val onEditCard: (FlashCard) -> Unit = { card ->
         navController.navigate(
@@ -126,7 +133,7 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
             modifier = Modifier.padding(innerPadding)
         ) {
             composable<MainRoute> {
-                MenuPage(
+                MenuScreen(
                     studyCardRoute = toStudy,
                     addCardRoute = toAdd,
                     searchCardRoute = toSearch,
@@ -135,7 +142,7 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
                 )
             }
             composable<AddCardRoute> {
-                AddCardPage(
+                AddCardScreen(
                     changeMessage = changeMessage,
                     insertFlashCard = insertFlashCard,
                     navigateBack = navigated
@@ -143,20 +150,21 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
             }
 
             composable<StudyCardRoute> {
-                StudyCardPage(
+                StudyCardScreen(
                     navigateBack = navigated,
                     getRandomLesson = getRandomLesson,
+                    updateFlashCardByPair = updateFlashCardByPair,
                     changeMessage = changeMessage,
                     networkService = networkService,
                 )
             }
 
             composable<SearchCardRoute> {
-                SearchCardPage(
+                SearchCardScreen(
                     changeMessage = changeMessage,
                     getAllFlashCards = getAllFlashCards,
                     navigateBack = navigated,
-                    searchFlashcardByPair = searchFlashcardByPair,
+                    searchFlashCardByPair = searchFlashCardByPair,
                     deleteFlashcardByPair = deleteFlashcardByPair,
                     onEditCard = onEditCard,
                     onSelectedCard = onCardSelected
@@ -170,8 +178,9 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
                     navigateBack = navigated,
                     englishOld = args.engOld,
                     vietnameseOld = args.vietOld,
-                    getFlashcardByPair = getFlashcardByPair,
-                    updateFlashcardByPair = updateFlashcardByPair
+                    getFlashCardByPair = getFlashCardByPair,
+                    updateFlashCardByPair = updateFlashCardByPair,
+                    networkService = networkService
                 )
             }
 
@@ -187,7 +196,7 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
             }
 
             composable<LogInRoute> {
-                LogIn(
+                LogInScreen(
                     changeMessage = changeMessage,
                     navigateBack = navigated,
                     networkService = networkService,
@@ -196,7 +205,7 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
             }
 
             composable<TokenRoute> {
-                backStackEntry ->
+                    backStackEntry ->
                 val args: TokenRoute = backStackEntry.toRoute()
                 TokenScreen(
                     email = args.email,
@@ -207,10 +216,3 @@ fun AnNamStudyRoomApp(navController: NavHostController = rememberNavController()
         }
     }
 }
-
-// composable<LoginRoute> {
-//    LoginScreen(
-//      changeMessage = changeMessage,
-//      networkService = networkService
-//    )
-//}

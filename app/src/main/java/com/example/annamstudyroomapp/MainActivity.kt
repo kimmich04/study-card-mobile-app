@@ -1,5 +1,5 @@
+//MainActivity.kt
 package com.example.annamstudyroomapp
-
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,7 +16,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
-
 val Context.dataStore by preferencesDataStore(
     name = "user_credentials"
 )
@@ -32,11 +31,7 @@ class MainActivity : ComponentActivity() {
                 val appContext = applicationContext
 
                 val db = AppDatabase.getDatabase(appContext)
-//                applicationContext,
-//                AppDatabase::class.java, "App Database"
-//            ).build()
                 val flashCardDao = db.flashCardDao()
-
 
                 // network
                 // Create a single OkHttpClient instance
@@ -72,19 +67,3 @@ class MainActivity : ComponentActivity() {
 fun AnNamStudyRoomTheme(content: @Composable () -> Unit) {
     MaterialTheme(content = content)
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun MenuPagePreview() {
-    //AnNamStudyRoomTheme {
-        //MenuPage(navController = rememberNavController())
-    //}
-//}
-
-//@Preview(showBackground = true)
-//@Composable
-//fun AddCardPagePreview() {
-    //AnNamStudyRoomTheme {
-        //AddCardPage(navController = rememberNavController())
-    //}
-//}

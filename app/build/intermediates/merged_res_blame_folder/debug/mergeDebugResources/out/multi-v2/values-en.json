@@ -1,0 +1,26 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.annamstudyroomapp-mergeDebugResources-49:/values-en/values-en.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Admin\\AndroidStudioProjects\\AndroidAppProject\\app\\src\\main\\res\\values-en\\strings.xml",
+                    "from": {
+                        "startLines": "1,2",
+                        "startColumns": "4,4",
+                        "startOffsets": "17,77",
+                        "endColumns": "58,50",
+                        "endOffsets": "71,123"
+                    },
+                    "to": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,114",
+                        "endColumns": "58,49",
+                        "endOffsets": "109,159"
+                    }
+                }
+            ]
+        }
+    ]
+}

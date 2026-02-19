@@ -1,0 +1,5 @@
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android" android:defaultLocale="vn">
+    <locale android:name="vn"/>
+    <locale android:name="en"/>
+    <locale android:name="vi"/>
+</locale-config>

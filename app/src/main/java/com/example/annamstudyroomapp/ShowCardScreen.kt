@@ -1,3 +1,4 @@
+//ShowCardScreen.kt
 package com.example.annamstudyroomapp
 
 import androidx.compose.foundation.layout.Arrangement
@@ -29,12 +30,12 @@ fun ShowCardScreen(
     vietnamese: String,
     getAllFlashCards: suspend () -> List<FlashCard>
 ) {
-    changeMessage("Welcome to Study Card Page")
+    changeMessage("Welcome to Show Card Page")
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Study card page", fontWeight = FontWeight.Bold) },
+                title = { Text("Show Card Page", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

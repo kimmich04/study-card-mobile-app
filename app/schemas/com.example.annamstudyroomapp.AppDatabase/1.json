@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "67338ae8d7be140c0718ed7d08d47119",
+    "identityHash": "5c11078a83cc2daa2cfdb76d1f6a6c34",
     "entities": [
       {
         "tableName": "FlashCards",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `english_card` TEXT, `vietnamese_card` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `english_card` TEXT, `vietnamese_card` TEXT, `audio_card` TEXT)",
         "fields": [
           {
             "fieldPath": "uid",
@@ -22,6 +22,11 @@
           {
             "fieldPath": "vietnameseCard",
             "columnName": "vietnamese_card",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "audioCard",
+            "columnName": "audio_card",
             "affinity": "TEXT"
           }
         ],
@@ -47,7 +52,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '67338ae8d7be140c0718ed7d08d47119')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5c11078a83cc2daa2cfdb76d1f6a6c34')"
     ]
   }
 }

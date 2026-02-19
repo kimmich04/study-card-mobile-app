@@ -1,3 +1,4 @@
+//DataTypes.kt
 package com.example.annamstudyroomapp
 
 import kotlinx.serialization.Serializable

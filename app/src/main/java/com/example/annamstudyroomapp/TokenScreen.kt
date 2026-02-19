@@ -1,3 +1,4 @@
+//TokenScreen.kt
 package com.example.annamstudyroomapp
 
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,7 +94,6 @@ fun TokenScreen(
                 onClick = {
                     scope.launch {
                         //The withContext function is your primary tool for seamlessly moving between Dispatchers.IO,
-                        //Dispatchers.Default,
                         //and Dispatchers.Main within a single coroutine, ensuring background tasks don't freeze the UI.
 
                         //Start on Main (Implicitly): Composable functions generally run on the Main thread.
@@ -104,7 +104,6 @@ fun TokenScreen(
                         // where you can update your UI state and trigger recomposition.
 
                         withContext(Dispatchers.IO) {
-                            //token = result.token
                             //Prefer ApplicationContext: When you need a Context for operations that do not interact with the UI
                             //(e.g., file operations, database access, accessing resources like strings or drawables),
                             // use the application context.

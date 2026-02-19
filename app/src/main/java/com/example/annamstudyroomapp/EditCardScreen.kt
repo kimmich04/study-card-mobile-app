@@ -1,147 +1,231 @@
+//EditCardScreen.kt
 package com.example.annamstudyroomapp
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import android.util.Base64
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.security.MessageDigest
+
+/* ---------- Utils ---------- */
+
+fun generateAudioKey(text: String): String {
+    val bytes = MessageDigest
+        .getInstance("SHA-256")
+        .digest(text.trim().lowercase().toByteArray())
+
+    return bytes.joinToString("") { "%02x".format(it) }
+}
+
+/* ---------- Screen ---------- */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditCardScreen(
     navigateBack: () -> Unit,
-    changeMessage: (String) -> Unit = {},
+    changeMessage: (String) -> Unit,
     englishOld: String,
     vietnameseOld: String,
-    getFlashcardByPair: suspend (String, String) -> FlashCard?,
-    updateFlashcardByPair: suspend (String, String, String, String) -> Unit
+    getFlashCardByPair: suspend (String, String) -> FlashCard?,
+    updateFlashCardByPair: suspend (String, String, String, String, String) -> Unit,
+    networkService: NetworkService
 ) {
-    var card by remember { mutableStateOf<FlashCard?>(null) }
-
+    val context = LocalContext.current
+    val appContext = context.applicationContext
     val scope = rememberCoroutineScope()
 
     var englishText by remember { mutableStateOf("") }
     var vietnameseText by remember { mutableStateOf("") }
+    var audioKey by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
+    /* -------- Player -------- */
+    val player = remember { ExoPlayer.Builder(context).build() }
+    DisposableEffect(Unit) { onDispose { player.release() } }
+
+    /* -------- Load card -------- */
     LaunchedEffect(Unit) {
-        changeMessage("Welcome to Edit Card Page")
-    }
-
-    LaunchedEffect(englishOld, vietnameseOld) {
-        val loaded = getFlashcardByPair(englishOld, vietnameseOld)
-        card = loaded
-        if (loaded != null) {
-            englishText = loaded.englishCard ?: ""
-            vietnameseText = loaded.vietnameseCard ?: ""
+        val card = getFlashCardByPair(englishOld, vietnameseOld)
+        card?.let {
+            englishText = it.englishCard.orEmpty()
+            vietnameseText = it.vietnameseCard.orEmpty()
+            audioKey = it.audioCard.orEmpty()
         }
     }
 
-    if (card == null) {
-        Text("Loading...")
-        return
-    }
+    val audioExists = audioKey.isNotBlank()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Study card page", fontWeight = FontWeight.Bold) },
+                title = { Text("Edit card", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { navigateBack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = navigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Blue,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = Color.White
                 )
             )
         }
-    ) { paddingValues ->
+    ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(padding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
-
         ) {
-            Text(
-                text = "Edit Flashcard",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
 
-            OutlinedTextField (
+            OutlinedTextField(
                 value = englishText,
-                onValueChange = {englishText = it},
-                enabled = true,
-                label = { Text(stringResource(R.string.english_label))},
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Enter text") }
+                onValueChange = { englishText = it },
+                label = { Text("English") },
+                modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField (
+            OutlinedTextField(
                 value = vietnameseText,
-                onValueChange = {vietnameseText = it},
-                enabled = true,
-                label = { Text(stringResource(R.string.vietnamese_label))},
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Enter text") }
+                onValueChange = { vietnameseText = it },
+                label = { Text("Vietnamese") },
+                modifier = Modifier.fillMaxWidth()
             )
 
+            OutlinedTextField(
+                value = audioKey,
+                onValueChange = {},
+                enabled = false,
+                label = { Text("Audio key") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            /* ---------- UPDATE ---------- */
             Button(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     scope.launch {
-                        updateFlashcardByPair(
+                        updateFlashCardByPair(
                             englishOld,
                             vietnameseOld,
                             englishText,
-                            vietnameseText)
+                            vietnameseText,
+                            audioKey
+                        )
                         changeMessage("Card updated")
                         navigateBack()
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(8.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue
-                )
-            ){
+                }
+            ) {
                 Text("Update")
+            }
+
+            /* ---------- GENERATE ---------- */
+            if (!audioExists) {
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
+                    onClick = {
+                        scope.launch {
+                            val prefs = appContext.dataStore.data.first()
+                            val email = prefs[EMAIL].orEmpty()
+                            val token = prefs[TOKEN].orEmpty()
+
+                            if (email.isBlank() || token.isBlank()) {
+                                changeMessage("User not logged in")
+                                return@launch
+                            }
+
+                            isLoading = true
+                            val key = generateAudioKey(vietnameseText)
+                            audioKey = key
+
+                            try {
+                                val result = withContext(Dispatchers.IO) {
+                                    networkService.generateAudio(
+                                        email = AudioCredential(
+                                            word = vietnameseText,
+                                            email = email,
+                                            token = token
+                                        )
+                                    )
+                                }
+
+                                if (result.code == 200) {
+                                    val bytes =
+                                        Base64.decode(result.message, Base64.DEFAULT)
+
+                                    saveAudioToInternalStorage(
+                                        context,
+                                        bytes,
+                                        "$key.mp3"
+                                    )
+                                    changeMessage("Audio generated")
+                                } else {
+                                    audioKey = ""
+                                    changeMessage("Generation failed")
+                                }
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }
+                ) {
+                    Text(if (isLoading) "Generating..." else "Generate audio")
+                }
+            }
+
+            /* ---------- PLAY + CLEAN ---------- */
+            if (audioExists) {
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        val file = File(context.filesDir, "$audioKey.mp3")
+                        if (!file.exists()) {
+                            changeMessage("Audio file missing")
+                            return@Button
+                        }
+
+                        player.setMediaItem(MediaItem.fromUri(file.toUri()))
+                        player.prepare()
+                        player.play()
+                    }
+                ) {
+                    Text("Play audio")
+                }
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        val file = File(context.filesDir, "$audioKey.mp3")
+                        if (file.exists()) file.delete()
+
+                        audioKey = ""
+                        changeMessage("Audio cleaned (click Update to save)")
+                    }
+                ) {
+                    Text("Clean audio")
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
